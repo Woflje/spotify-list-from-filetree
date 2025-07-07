@@ -27,6 +27,25 @@ SCOPE = "playlist-modify-public"
 BLACKLIST_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif"]
 
 
+class GuiSpotifyOAuth(SpotifyOAuth):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+
+	def get_authorization_code(self, auth_url):
+		# Open browser automatically
+		webbrowser.open(auth_url)
+		
+		# Ask user to paste the full redirect URL
+		redirect_response = simpledialog.askstring(
+			"Spotify Login",
+			"After logging in, paste the full redirected URL here:"
+		)
+		if not redirect_response:
+			messagebox.showerror("Auth Failed", "No redirect URL provided.")
+			return None
+		return self.parse_response_code(redirect_response)
+
+
 def reveal_in_explorer(file_path):
 	"""
 	Open the system's file explorer/finder at the location of file_path.
@@ -66,7 +85,7 @@ class SpotifyPlaylistApp:
 		# Initialize Spotify client
 		try:
 			self.sp = spotipy.Spotify(
-				auth_manager=SpotifyOAuth(
+				auth_manager=GuiSpotifyOAuth(
 					client_id=SPOTIFY_CLIENT_ID,
 					client_secret=SPOTIFY_CLIENT_SECRET,
 					redirect_uri=SPOTIFY_REDIRECT_URI,
@@ -128,6 +147,7 @@ class SpotifyPlaylistApp:
 			# Gather non-blacklisted files
 			self.audio_files = self.get_audio_files(directory)
 			self.audio_files.sort(key=lambda x: os.path.basename(x).lower())
+
 			
 			# Start with the first file
 			self.current_index = 0

@@ -28,22 +28,40 @@ BLACKLIST_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif"]
 
 
 class GuiSpotifyOAuth(SpotifyOAuth):
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-
 	def get_authorization_code(self, auth_url):
-		# Open browser automatically
 		webbrowser.open(auth_url)
-		
-		# Ask user to paste the full redirect URL
-		redirect_response = simpledialog.askstring(
-			"Spotify Login",
-			"After logging in, paste the full redirected URL here:"
-		)
+
+		# Create a guaranteed visible input window
+		root = tk.Tk()
+		root.title("Spotify Login")
+
+		tk.Label(root, text="Paste the full URL you were redirected to:").pack(padx=10, pady=(10, 0))
+
+		url_var = tk.StringVar()
+		entry = tk.Entry(root, textvariable=url_var, width=80)
+		entry.pack(padx=10, pady=10)
+		entry.focus()
+
+		def submit():
+			root.quit()
+			root.destroy()
+
+		tk.Button(root, text="Submit", command=submit).pack(pady=(0, 10))
+
+		# Start the blocking dialog
+		root.mainloop()
+		redirect_response = url_var.get().strip()
+
 		if not redirect_response:
-			messagebox.showerror("Auth Failed", "No redirect URL provided.")
+			messagebox.showerror("Auth Error", "You must paste the redirected URL to continue.")
 			return None
-		return self.parse_response_code(redirect_response)
+
+		code = self.parse_response_code(redirect_response)
+		if not code:
+			messagebox.showerror("Parse Error", "Could not extract code from the URL.")
+			return None
+
+		return code
 
 
 def reveal_in_explorer(file_path):
@@ -147,7 +165,6 @@ class SpotifyPlaylistApp:
 			# Gather non-blacklisted files
 			self.audio_files = self.get_audio_files(directory)
 			self.audio_files.sort(key=lambda x: os.path.basename(x).lower())
-
 			
 			# Start with the first file
 			self.current_index = 0

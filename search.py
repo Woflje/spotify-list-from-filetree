@@ -14,9 +14,13 @@ import pygame  # for audio playback
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth, SpotifyOauthError
 
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 
-SPOTIPY_REDIRECT_URI = 'https://spotify.com'
+SPOTIFY_CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID')
+SPOTIFY_CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET')
+SPOTIFY_REDIRECT_URI = 'https://spotify.com'
+
+print(f"Using CLIENT ID '{SPOTIFY_CLIENT_ID}'")
 
 SCOPE = "playlist-modify-public"
 
@@ -63,9 +67,9 @@ class SpotifyPlaylistApp:
 		try:
 			self.sp = spotipy.Spotify(
 				auth_manager=SpotifyOAuth(
-					client_id=os.getenv('SPOTIPY_CLIENT_ID'),
-					client_secret=os.getenv('SPOTIPY_CLIENT_SECRET'),
-					redirect_uri=SPOTIPY_REDIRECT_URI,
+					client_id=SPOTIFY_CLIENT_ID,
+					client_secret=SPOTIFY_CLIENT_SECRET,
+					redirect_uri=SPOTIFY_REDIRECT_URI,
 					scope=SCOPE
 				)
 			)
@@ -123,6 +127,7 @@ class SpotifyPlaylistApp:
 			self.playlist_name = simpledialog.askstring("Playlist Name", "Enter the name for the new Spotify Playlist:")
 			# Gather non-blacklisted files
 			self.audio_files = self.get_audio_files(directory)
+			self.audio_files.sort()
 			
 			# Start with the first file
 			self.current_index = 0

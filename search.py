@@ -127,7 +127,7 @@ class SpotifyPlaylistApp:
 			self.playlist_name = simpledialog.askstring("Playlist Name", "Enter the name for the new Spotify Playlist:")
 			# Gather non-blacklisted files
 			self.audio_files = self.get_audio_files(directory)
-			self.audio_files.sort()
+			self.audio_files.sort(key=lambda x: os.path.basename(x).lower())
 			
 			# Start with the first file
 			self.current_index = 0

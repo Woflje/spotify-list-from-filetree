@@ -27,43 +27,6 @@ SCOPE = "playlist-modify-public"
 BLACKLIST_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif"]
 
 
-class GuiSpotifyOAuth(SpotifyOAuth):
-	def get_authorization_code(self, auth_url):
-		webbrowser.open(auth_url)
-
-		# Create a guaranteed visible input window
-		root = tk.Tk()
-		root.title("Spotify Login")
-
-		tk.Label(root, text="Paste the full URL you were redirected to:").pack(padx=10, pady=(10, 0))
-
-		url_var = tk.StringVar()
-		entry = tk.Entry(root, textvariable=url_var, width=80)
-		entry.pack(padx=10, pady=10)
-		entry.focus()
-
-		def submit():
-			root.quit()
-			root.destroy()
-
-		tk.Button(root, text="Submit", command=submit).pack(pady=(0, 10))
-
-		# Start the blocking dialog
-		root.mainloop()
-		redirect_response = url_var.get().strip()
-
-		if not redirect_response:
-			messagebox.showerror("Auth Error", "You must paste the redirected URL to continue.")
-			return None
-
-		code = self.parse_response_code(redirect_response)
-		if not code:
-			messagebox.showerror("Parse Error", "Could not extract code from the URL.")
-			return None
-
-		return code
-
-
 def reveal_in_explorer(file_path):
 	"""
 	Open the system's file explorer/finder at the location of file_path.
@@ -103,7 +66,7 @@ class SpotifyPlaylistApp:
 		# Initialize Spotify client
 		try:
 			self.sp = spotipy.Spotify(
-				auth_manager=GuiSpotifyOAuth(
+				auth_manager=SpotifyOAuth(
 					client_id=SPOTIFY_CLIENT_ID,
 					client_secret=SPOTIFY_CLIENT_SECRET,
 					redirect_uri=SPOTIFY_REDIRECT_URI,
